@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   cassandra:
-    image: cassandra:4.1
-    ports:
-      - "9042:9042"
+    image: cassandra:5.0
     environment:
       - CASSANDRA_CLUSTER_NAME=TestCluster
       - CASSANDRA_DC=datacenter1
@@ -25,8 +23,8 @@ services:
 
   async-app:
     build: ./apps/async-app
-    ports:
-      - "8001:8000"
+    expose:
+      - "8000"
     environment:
       - CASSANDRA_HOSTS=cassandra
       - CASSANDRA_PORT=9042
@@ -47,8 +45,8 @@ services:
 
   sync-app:
     build: ./apps/sync-app
-    ports:
-      - "8002:8000"
+    expose:
+      - "8000"
     environment:
       - CASSANDRA_HOSTS=cassandra
       - CASSANDRA_PORT=9042
@@ -69,8 +67,8 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
+    expose:
+      - "9090"
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -84,8 +82,8 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
@@ -101,8 +99,8 @@ services:
 
   loki:
     image: grafana/loki:latest
-    ports:
-      - "3100:3100"
+    expose:
+      - "3100"
     volumes:
       - ./monitoring/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
       - loki_data:/loki

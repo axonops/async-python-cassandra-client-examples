@@ -15,7 +15,7 @@ This framework provides:
 
 ### Prerequisites
 - Docker and Docker Compose
-- Python 3.11+ (for local development)
+- Python 3.12+ (for local development)
 - 8GB+ RAM recommended
 
 ### Running with Local Cassandra
@@ -52,11 +52,8 @@ docker-compose -f docker-compose.external.yml up -d
 
 ## Service URLs
 
-- **Async App**: http://localhost:8001
-- **Sync App**: http://localhost:8002  
-- **Grafana**: http://localhost:3000 (admin/admin)
-- **Prometheus**: http://localhost:9090
-- **Web UI**: http://localhost:3001
+- **Web UI**: http://localhost:3001 (provides access to all services)
+- All other services run on internal network and are accessible through the Web UI
 
 ## API Endpoints
 
@@ -99,10 +96,10 @@ pip install -r load-testing/requirements.txt
 
 # Run Locust tests
 cd load-testing
-locust -f locustfile.py --host http://localhost:8001
+locust -f locustfile.py --host http://localhost:3001
 
 # Run k6 tests (requires k6 installation)
-k6 run k6-script.js --env BASE_URL=http://localhost:8001
+k6 run k6-script.js --env BASE_URL=http://localhost:3001
 
 # Run comprehensive test suite
 ./run-tests.sh
@@ -123,7 +120,7 @@ k6 run k6-script.js --env BASE_URL=http://localhost:8001
 
 ### Grafana Dashboards
 
-1. Navigate to http://localhost:3000
+1. Navigate to http://localhost:3001 and click on Grafana
 2. Login with admin/admin
 3. Import provided dashboards from `monitoring/grafana/dashboards/`
 
@@ -216,7 +213,7 @@ LOG_LEVEL=INFO
 
 1. **Cassandra not starting**: Increase Docker memory allocation
 2. **Connection refused**: Wait for Cassandra health check to pass
-3. **Metrics not showing**: Check Prometheus targets at http://localhost:9090/targets
+3. **Metrics not showing**: Check Prometheus targets through the Web UI
 
 ### Debug Commands
 

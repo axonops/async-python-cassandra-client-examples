@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -12,6 +12,9 @@ COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Install async-cassandra from TestPyPI (latest version)
+RUN pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ async-cassandra
 
 # Copy application code
 COPY app/ ./app/

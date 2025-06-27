@@ -16,7 +16,6 @@ class Settings(BaseSettings):
     app_port: int = 8000
     workers: int = 4
     log_level: str = "INFO"
-    metrics_port: int = 9090
     
     # Performance Testing
     max_connections: int = 100

@@ -44,7 +44,7 @@ echo "Testing connection failure recovery..."
 
 # 1. Start baseline test
 echo "Phase 1: Establishing baseline..."
-curl -X POST http://localhost:8001/api/v1/users -H "Content-Type: application/json" \
+curl -X POST http://localhost:3001/api/async/users -H "Content-Type: application/json" \
   -d '{"username":"test_before","email":"before@test.com"}'
 
 # 2. Create network partition
@@ -143,7 +143,7 @@ requests.post('http://localhost:8474/proxies/cassandra/toxics', json={
 # docker-compose.cassandra-cluster.yml
 services:
   cassandra1:
-    image: cassandra:4.1
+    image: cassandra:5.0
     environment:
       - CASSANDRA_CLUSTER_NAME=TestCluster
       - CASSANDRA_SEEDS=cassandra1
@@ -152,7 +152,7 @@ services:
       - cassandra-network
 
   cassandra2:
-    image: cassandra:4.1
+    image: cassandra:5.0
     environment:
       - CASSANDRA_CLUSTER_NAME=TestCluster
       - CASSANDRA_SEEDS=cassandra1
@@ -163,7 +163,7 @@ services:
       - cassandra-network
 
   cassandra3:
-    image: cassandra:4.1
+    image: cassandra:5.0
     environment:
       - CASSANDRA_CLUSTER_NAME=TestCluster
       - CASSANDRA_SEEDS=cassandra1
