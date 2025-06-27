@@ -1,0 +1,125 @@
+version: '3.8'
+
+# This compose file is for connecting to an external Cassandra cluster
+# It excludes the local Cassandra service
+
+services:
+  async-app:
+    build: ./apps/async-app
+    ports:
+      - "8001:8000"
+    environment:
+      - CASSANDRA_HOSTS=${CASSANDRA_HOSTS:-cassandra1.example.com,cassandra2.example.com}
+      - CASSANDRA_PORT=${CASSANDRA_PORT:-9042}
+      - CASSANDRA_KEYSPACE=${CASSANDRA_KEYSPACE:-perftest}
+      - CASSANDRA_DATACENTER=${CASSANDRA_DATACENTER:-datacenter1}
+      - CASSANDRA_USERNAME=${CASSANDRA_USERNAME}
+      - CASSANDRA_PASSWORD=${CASSANDRA_PASSWORD}
+      - APP_PORT=8000
+      - METRICS_ENABLED=true
+      - LOG_LEVEL=INFO
+    networks:
+      - app-network
+    labels:
+      - "prometheus.io/scrape=true"
+      - "prometheus.io/port=8000"
+      - "prometheus.io/path=/metrics"
+
+  sync-app:
+    build: ./apps/sync-app
+    ports:
+      - "8002:8000"
+    environment:
+      - CASSANDRA_HOSTS=${CASSANDRA_HOSTS:-cassandra1.example.com,cassandra2.example.com}
+      - CASSANDRA_PORT=${CASSANDRA_PORT:-9042}
+      - CASSANDRA_KEYSPACE=${CASSANDRA_KEYSPACE:-perftest}
+      - CASSANDRA_DATACENTER=${CASSANDRA_DATACENTER:-datacenter1}
+      - CASSANDRA_USERNAME=${CASSANDRA_USERNAME}
+      - CASSANDRA_PASSWORD=${CASSANDRA_PASSWORD}
+      - APP_PORT=8000
+      - METRICS_ENABLED=true
+      - LOG_LEVEL=INFO
+    networks:
+      - app-network
+    labels:
+      - "prometheus.io/scrape=true"
+      - "prometheus.io/port=8000"
+      - "prometheus.io/path=/metrics"
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./monitoring/grafana/dashboard-provisioning.yaml:/etc/grafana/provisioning/dashboards/main.yaml
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - app-network
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - app-network
+
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./monitoring/promtail/promtail-config.yaml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - app-network
+
+  web-ui:
+    build: ./apps/web-ui
+    ports:
+      - "3001:80"
+    environment:
+      - ASYNC_API_URL=http://async-app:8000
+      - SYNC_API_URL=http://sync-app:8000
+      - GRAFANA_URL=http://grafana:3000
+    depends_on:
+      - async-app
+      - sync-app
+    networks:
+      - app-network
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+
+networks:
+  app-network:
+    driver: bridge

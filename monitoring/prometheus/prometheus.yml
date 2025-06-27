@@ -1,0 +1,40 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'cassandra-perf-test'
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'async-app'
+    static_configs:
+      - targets: ['async-app:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  - job_name: 'sync-app'
+    static_configs:
+      - targets: ['sync-app:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+
+# Recording rules for performance comparisons
+rule_files:
+  - 'recording_rules.yml'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
